@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Play - Fruit Memory</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="game-header">
+    <div class="left">
+      <button class="small" onclick="location.href='index.html'">⬅ Exit</button>
+    </div>
+
+    <div class="center hud" id="hud"></div>
+
+    <div class="right">
+      <button class="small" onclick="restartSame()">Restart</button>
+    </div>
+  </header>
+
+  <main class="main-area">
+    <div id="game-info" class="game-info"></div>
+    <div id="game-board" class="board" aria-live="polite"></div>
+
+    <div id="message-area" class="message-area"></div>
+
+    <div id="next-level-row" style="display:none; margin-top:18px;">
+      <button id="next-level-btn" class="big">Next Level ➜</button>
+    </div>
+  </main>
+
+  <!-- Sounds -->
+  <audio id="flipSound" src="https://assets.mixkit.co/sfx/preview/mixkit-fast-small-sweep-transition-166.wav"></audio>
+  <audio id="matchSound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-ball-tap-2079.wav"></audio>
+  <audio id="winSound" src="https://assets.mixkit.co/sfx/preview/mixkit-fairy-win-2856.wav"></audio>
+
+  <script src="game.js"></script>
+</body>
+</html>

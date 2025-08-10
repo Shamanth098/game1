@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Memory Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="player1-bg">
+    <h1>Multiplayer Memory Game</h1>
+    <div class="menu">
+        <button class="btn" onclick="startGame(6)">Easy (6 Pairs)</button>
+        <button class="btn" onclick="startGame(10)">Normal (10 Pairs)</button>
+        <button class="btn" onclick="startGame(16)">Hard (16 Pairs)</button>
+    </div>
+
+    <div id="scoreboard" class="scoreboard hidden">
+        <div class="scorebox">Player 1 Score: <span id="score1">0</span></div>
+        <div class="scorebox">Player 2 Score: <span id="score2">0</span></div>
+        <div class="scorebox">Current Turn: <span id="turn">Player 1</span></div>
+    </div>
+
+    <div id="game-board" class="board"></div>
+
+    <div class="menu hidden" id="menu-bottom">
+        <a href="index.html" class="btn">Main Menu</a>
+    </div>
+
+    <script src="multi.js"></script>
+</body>
+</html>
