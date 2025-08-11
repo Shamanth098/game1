@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Color Rush — Fill the Board</title>
+<style>
+  :root{
+    --bg: linear-gradient(135deg,#f7f7fb,#e8f1ff);
+    --panel: #ffffff;
+    --accent: #ff6f61;
+    --card-size: 44px;
+    --gap: 6px;
+  }
+  html,body{height:100%; margin:0; font-family:Inter,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:#111; user-select: none;}
+  .wrap{max-width:1100px; margin:24px auto; padding:18px;}
+  header{display:flex;align-items:center;justify-content:space-between; gap:12px}
+  h1{margin:0;font-size:1.2rem}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .panel{background:var(--panel); border-radius:12px; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,0.08)}
+  .board-area{display:flex; gap:18px; margin-top:18px; align-items:flex-start; flex-wrap:wrap}
+  .board-wrap{display:flex;flex-direction:column;gap:8px;align-items:center}
+  #board { display:grid; gap:var(--gap); touch-action: manipulation; }
+  .cell{
+    width:var(--card-size);
+    height:var(--card-size);
+    border-radius:6px;
+    transition: background-color 0.35s ease, transform 160ms ease;
+    box-shadow: inset 0 -4px rgba(0,0,0,0.06);
+    cursor: pointer;
+  }
+  .cell:active{ transform: scale(.96) }
+  .hud{min-width:240px; display:flex;flex-direction:column; gap:10px}
+  .pal{display:flex;gap:8px;flex-wrap:wrap}
+  .color-btn{width:44px;height:44px;border-radius:8px;border:3px solid transparent;cursor:pointer; transition:transform .12s, box-shadow .12s;}
+  .color-btn:focus{outline:none; box-shadow:0 6px 18px rgba(0,0,0,0.12);}
+  .color-btn.active{ border-color:#222; transform:translateY(-3px); }
+  .small{font-size:0.9rem;color:#555}
+  .stat-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .stat{background:#f3f6ff;padding:8px 10px;border-radius:8px;font-weight:700}
+  .btn{background:var(--accent); color:white; border:none; border-radius:8px; padding:8px 12px; cursor:pointer; font-weight:700; transition: background 0.3s ease, transform 0.15s ease;}
+  .btn:hover{background:#ff4f42; transform: scale(1.05);}
+  .btn.ghost{background:transparent;color:var(--accent);border:2px solid rgba(255,111,97,0.15)}
+  .footer{margin-top:14px;color:#666;font-size:0.9rem}
+  @media (max-width:820px){
+    .board-area{flex-direction:column;align-items:center}
+    .hud{min-width:unset;width:100%}
+  }
+  .popup{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:9999;animation:fadeIn 0.3s ease;}
+  .popup .panel{max-width:420px;text-align:center;animation:scaleIn 0.3s ease;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes scaleIn{from{transform:scale(0.8)}to{transform:scale(1)}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>🎨 Color Rush — Fill the Board</h1>
+      <div class="controls">
+        <a href="index.html" class="btn">Main Menu</a>
+        <div class="panel small">Tip: use keys 1-6 to pick a color</div>
+      </div>
+    </header>
+
+    <div class="board-area">
+      <div class="board-wrap panel">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div class="small">Move limit</div>
+          <select id="levelSelect">
+            <option value="8_6">Easy — 8×8 / 6 colors</option>
+            <option value="10_6">Normal — 10×10 / 6 colors</option>
+            <option value="12_6">Hard — 12×12 / 6 colors</option>
+            <option value="14_8">Expert — 14×14 / 8 colors</option>
+          </select>
+          <button class="btn" id="newGameBtn">New Game</button>
+        </div>
+        <div id="board" style="margin-top:12px"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">
+          <button class="btn ghost" id="undoBtn">Undo</button>
+          <button class="btn ghost" id="hintBtn">Hint</button>
+          <button class="btn ghost" id="autoBtn">Auto-solve</button>
+        </div>
+      </div>
+
+      <aside class="hud panel">
+        <div>
+          <div class="small">Palette</div>
+          <div id="palette" class="pal" style="margin-top:8px"></div>
+        </div>
+        <div class="stat-row">
+          <div class="stat" id="moves">Moves: 0</div>
+          <div class="stat" id="limit">Limit: —</div>
+          <div class="stat" id="filledPercent">Filled: 0%</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat small" id="timer">Time: 0s</div>
+          <div class="stat small" id="best">Best: —</div>
+        </div>
+        <div style="margin-top:6px">
+          <div class="small">Game Controls</div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <button class="btn" id="undo2">Reset Level</button>
+            <button class="btn ghost" id="resetAll">Full Reset</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div id="popupRoot"></div>
+
+<script>
+/* Full game JS logic from your original version — unchanged */
+const PRESET_COLORS_6 = ['#ef476f','#ffd166','#06d6a0','#118ab2','#073b4c','#8d99ae'];
+const PRESET_COLORS_8 = ['#ef476f','#ffd166','#06d6a0','#118ab2','#073b4c','#8d99ae','#f28500','#b388eb'];
+
+const boardEl = document.getElementById('board');
+const paletteEl = document.getElementById('palette');
+const movesEl = document.getElementById('moves');
+const limitEl = document.getElementById('limit');
+const filledEl = document.getElementById('filledPercent');
+const timerEl = document.getElementById('timer');
+const bestEl = document.getElementById('best');
+const levelSelect = document.getElementById('levelSelect');
+const newGameBtn = document.getElementById('newGameBtn');
+const undoBtn = document.getElementById('undoBtn');
+const hintBtn = document.getElementById('hintBtn');
+const autoBtn = document.getElementById('autoBtn');
+const undo2Btn = document.getElementById('undo2');
+const resetAllBtn = document.getElementById('resetAll');
+
+let rows=8, cols=8, colorCount=6;
+let grid = [];
+let moves=0, moveLimit=25;
+let timer=0, timerInterval=null;
+let historyStack = [];
+let palette = PRESET_COLORS_6;
+let bestKey = '';
+
+const rand = (n)=>Math.floor(Math.random()*n);
+function idx(r,c){return r*cols+c}
+function inRange(r,c){ return r>=0 && c>=0 && r<rows && c<cols }
+
+function floodFillCopy(oldGrid, targetColor, newColor){
+  if (targetColor===newColor) return oldGrid.slice();
+  const g = oldGrid.slice();
+  const w = cols, h = rows;
+  const stack=[0];
+  const visited = new Uint8Array(w*h);
+  const t=targetColor;
+  while(stack.length){
+    const i = stack.pop();
+    if (visited[i]) continue;
+    visited[i]=1;
+    if (g[i]!==t) continue;
+    g[i]= newColor;
+    const r = Math.floor(i/w), c = i % w;
+    if (r>0) stack.push((r-1)*w + c);
+    if (r<h-1) stack.push((r+1)*w + c);
+    if (c>0) stack.push(r*w + (c-1));
+    if (c<w-1) stack.push(r*w + (c+1));
+  }
+  return g;
+}
+
+function percentFilled(g){
+  const first = g[0];
+  let cnt=0;
+  for(let x of g) if (x===first) cnt++;
+  return Math.round(100*cnt/(rows*cols));
+}
+
+function renderBoard(){
+  boardEl.innerHTML='';
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const cell = document.createElement('div');
+      cell.className='cell';
+      cell.style.background = palette[ grid[idx(r,c)] ];
+      boardEl.appendChild(cell);
+    }
+  }
+  movesEl.textContent = `Moves: ${moves}`;
+  limitEl.textContent = `Limit: ${moveLimit}`;
+  filledEl.textContent = `Filled: ${percentFilled(grid)}%`;
+  boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--card-size))`;
+}
+
+function buildPalette(){
+  paletteEl.innerHTML='';
+  palette.forEach((col,i)=>{
+    const b = document.createElement('button');
+    b.className='color-btn';
+    b.style.background=col;
+    b.title = `Color ${i+1} (key ${i+1})`;
+    b.addEventListener('click', ()=> chooseColor(i));
+    paletteEl.appendChild(b);
+  });
+  updateActivePalette();
+}
+
+function updateActivePalette(){
+  const top = grid[0];
+  Array.from(paletteEl.children).forEach((btn, i)=>{
+    btn.classList.toggle('active', i===top);
+  });
+}
+
+function newGame(){
+  const v = levelSelect.value.split('_'); rows = parseInt(v[0]); cols = rows; colorCount = parseInt(v[1]);
+  palette = colorCount<=6 ? PRESET_COLORS_6.slice(0,colorCount) : PRESET_COLORS_8.slice(0,colorCount);
+  moveLimit = Math.max(20, Math.floor((rows*cols)/(colorCount/1.5)));
+  grid = new Array(rows*cols);
+  for(let i=0;i<rows*cols;i++) grid[i]= rand(colorCount);
+  moves=0; historyStack=[];
+  buildPalette();
+  renderBoard();
+  startTimer(true);
+  bestKey = `flood_best_${rows}x${cols}_${colorCount}`;
+  loadBest();
+}
+
+function chooseColor(colorIndex){
+  const current = grid[0];
+  if (colorIndex===current) return;
+  historyStack.push(grid.slice());
+  grid = floodFillCopy(grid, current, colorIndex);
+  moves++;
+  renderBoard();
+  updateActivePalette();
+  checkWinOrLimit();
+}
+
+function checkWinOrLimit(){
+  const pct = percentFilled(grid);
+  if (pct===100){
+    stopTimer();
+    saveBestIfBetter(moves, timer);
+    showPopup(`🎉 You filled the board in ${moves} moves and ${timer}s!`);
+    return;
+  }
+  if (moves>=moveLimit){
+    stopTimer();
+    showPopup(`⏳ Move limit reached. You used ${moves} moves.`);
+  }
+}
+
+function startTimer(reset=true){
+  stopTimer();
+  if (reset) timer=0;
+  timerInterval = setInterval(()=>{
+    timer++;
+    timerEl.textContent = `Time: ${timer}s`;
+  },1000);
+}
+function stopTimer(){ if(timerInterval){ clearInterval(timerInterval); timerInterval=null;}}
+
+function undo(){
+  if (historyStack.length===0) return;
+  grid = historyStack.pop();
+  moves = Math.max(0, moves-1);
+  renderBoard();
+  updateActivePalette();
+}
+
+function hint(){
+  const current = grid[0];
+  let bestGain=-1, bestColor=current;
+  for(let c=0;c<palette.length;c++){
+    if (c===current) continue;
+    const g2 = floodFillCopy(grid, current, c);
+    const gain = percentFilled(g2) - percentFilled(grid);
+    if (gain>bestGain){ bestGain=gain; bestColor=c; }
+  }
+  if (bestGain>0) {
+    const btn = paletteEl.children[bestColor];
+    btn.classList.add('active');
+    setTimeout(()=>updateActivePalette(), 600);
+  } else {
+    showPopup("No helpful hint available.");
+  }
+}
+
+function autoSolve(){
+  const backup = grid.slice(), backupMoves = moves;
+  const maxSteps = 200;
+  (async ()=>{
+    while(percentFilled(grid)<100 && maxSteps>0){
+      const current = grid[0];
+      let bestGain=-1, bestColor=current;
+      for(let c=0;c<palette.length;c++){
+        if (c===current) continue;
+        const g2 = floodFillCopy(grid, current, c);
+        const gain = percentFilled(g2) - percentFilled(grid);
+        if (gain>bestGain){ bestGain=gain; bestColor=c; }
+      }
+      if (bestGain<=0) break;
+      chooseColor(bestColor);
+      await new Promise(r=>setTimeout(r,150));
+    }
+    if (percentFilled(grid)!==100){
+      grid=backup.slice(); moves=backupMoves; renderBoard();
+    }
+  })();
+}
+
+function loadBest(){
+  try{
+    const raw = localStorage.getItem(bestKey);
+    if (!raw){ bestEl.textContent = 'Best: —'; return null; }
+    const obj = JSON.parse(raw);
+    bestEl.textContent = `Best: ${obj.moves} moves / ${obj.time}s`;
+    return obj;
+  }catch(e){ bestEl.textContent = 'Best: —'; return null; }
+}
+function saveBestIfBetter(movesVal, timeVal){
+  try{
+    const prev = loadBest();
+    const curr = { moves: movesVal, time: timeVal };
+    if (!prev || movesVal < prev.moves || (movesVal===prev.moves && timeVal < prev.time)){
+      localStorage.setItem(bestKey, JSON.stringify(curr));
+      bestEl.textContent = `Best: ${movesVal} moves / ${timeVal}s`;
+    }
+  }catch(e){}
+}
+
+function showPopup(html){
+  const overlay = document.createElement('div');
+  overlay.className='popup';
+  overlay.innerHTML = `<div class="panel"><h3>${html}</h3><div style="margin-top:12px"><button class="btn" id="closePopup">OK</button></div></div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('closePopup').addEventListener('click', ()=> overlay.remove());
+}
+
+newGameBtn.addEventListener('click', ()=> newGame());
+levelSelect.addEventListener('change', ()=> newGame());
+undoBtn.addEventListener('click', undo);
+undo2Btn.addEventListener('click', ()=> newGame());
+hintBtn.addEventListener('click', hint);
+autoBtn.addEventListener('click', autoSolve);
+resetAllBtn.addEventListener('click', ()=> { localStorage.clear(); showPopup('All saved bests cleared.'); });
+
+window.addEventListener('keydown', (e)=>{
+  if(e.target.tagName==='INPUT' || e.target.tagName==='TEXTAREA') return;
+  const k = e.key;
+  if (k>='1' && k<='9'){
+    const idx = parseInt(k)-1;
+    if (idx>=0 && idx<palette.length) chooseColor(idx);
+  }
+  if (k==='u' || (e.ctrlKey && k==='z')) undo();
+  if (k==='r') newGame();
+});
+
+(function init(){ newGame(); })();
+
+/* Block right click & inspect */
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
+    e.preventDefault();
+  }
+});
+</script>
+</body>
+</html>
