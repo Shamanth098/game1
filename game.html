@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game - Main Menu</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            user-select: none; /* Disable text selection */
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <h1>Memory Game</h1>
+        <a href="single.html" class="btn">Single Player</a>
+        <a href="multi.html" class="btn">Multiplayer</a>
+    </div>
+
+    <script>
+        // Disable right-click
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Disable F12, Ctrl+Shift+I, Ctrl+U
+        document.addEventListener('keydown', event => {
+            if (
+                event.key === "F12" ||
+                (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "i") ||
+                (event.ctrlKey && event.key.toLowerCase() === "u")
+            ) {
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
