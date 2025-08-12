@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chess Game Menu</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(to right, #232526, #414345);
+        color: white;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        user-select: none; /* Disable text selection */
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 30px;
+    }
+
+    .btn {
+        display: inline-block;
+        background: #ff6f61;
+        color: white;
+        padding: 12px 25px;
+        margin: 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        cursor: pointer;
+        font-size: 18px;
+        transition: 0.3s;
+        border: none;
+    }
+
+    .btn:hover {
+        background: #ff3b2e;
+        transform: scale(1.05);
+    }
+
+    .menu {
+        display: flex;
+        flex-direction: column;
+    }
+</style>
+</head>
+<body>
+
+    <h1>♟ Chess Game</h1>
+    <div class="menu">
+        <a href="chess_single.html" class="btn">Single Player</a>
+        <a href="chess_multi.html" class="btn">Multiplayer</a>
+        <a href="index.html" class="btn">Back to Main Menu</a>
+    </div>
+
+<script>
+    // Disable right-click
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // Disable F12, Ctrl+Shift+I, Ctrl+U
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "F12" || 
+            (event.ctrlKey && event.shiftKey && event.key === 'I') ||
+            (event.ctrlKey && event.key === 'u')) {
+            event.preventDefault();
+        }
+    });
+</script>
+
+</body>
+</html>
